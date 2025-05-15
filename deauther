@@ -12,10 +12,12 @@ from aireplay_ng.aireplay import deauth_client
 
 from utils.list_aps import list_aps
 from utils.list_clients import list_clients
+from utils.platform import detect_platform, PLATFORM, is_program_installed
 
 parser = Argument()
 args = sys.argv
 parser.parse_args(args)
+platform = detect_platform()
 
 
 def check_root():
@@ -24,20 +26,33 @@ def check_root():
         exit()
 
 
-check_root()
+#check_root()
 
 
 def check_airmon_ng():
-    if os.system("airmon-ng") != 0:
-        return False
-
+    if platform == PLATFORM.LINUX and is_program_installed("airmon-ng"):
+        return True
+    elif platform == PLATFORM.MAC and is_program_installed("airbase-ng"):
+        return True
+    
+    return False
 
 if(check_airmon_ng() == False):
+
     print("")
     print("Installing required packages...")
     print("")
-    os.system("sudo apt-get update -y")
-    os.system("sudo apt-get install aircrack-ng -y")
+
+    if platform == PLATFORM.LINUX:
+        os.system("sudo apt-get update -y")
+        os.system("sudo apt-get install aircrack-ng -y")
+    elif platform == PLATFORM.MAC:
+        if not is_program_installed("brew"):
+           os.system("brew install aircrack-ng")
+        else:
+           print("please install aircrack-ng manually")
+    else:
+        print("unable to install required dependency \"aircrack-ng\" package \n please install it manually")
 
 mode, interface, channel, access_point, client, number, time, list_info = None, None, None, None, None, None, None, None
 
